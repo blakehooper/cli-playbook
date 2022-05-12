@@ -1,0 +1,57 @@
+---
+- name: Creates directory
+  become: yes
+  become_user: "{{ item }}"
+  file:
+    path: ~/Software
+    state: directory
+- name: Clone home reposity
+  become: yes
+  become_user: "{{ item }}"
+  git:
+    repo: https://github.com/blakehooper/home.git
+    dest: ~/Software/home
+    clone: yes
+    update: yes
+- name: Clone autocomplete repository
+  become: yes
+  become_user: "{{ item }}"
+  git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: ~/Software/home/zsh-custom/plugins/zsh-autosuggestions
+    clone: yes
+    update: yes
+- name: Update .zshrc with tmux start
+  become: yes
+  become_user: "{{ item }}"
+  when: ansible_user == item
+  blockinfile:
+    path: ~/.zshrc
+    backup: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK "
+    insertbefore: '^source '
+    block: |
+      ZSH_TMUX_AUTOSTART=true
+      ZSH_TMUX_AUTOCONNECT=false
+      ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+- name: Update .zshrc no tmux start
+  become: yes
+  become_user: "{{ item }}"
+  when: ansible_user !=  item
+  blockinfile:
+    path: ~/.zshrc
+    backup: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK "
+    insertbefore: '^source '
+    block: |
+      ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+
+- name: Replace the default
+  become: yes
+  become_user: "{{ item }}"
+  replace:
+    path: ~/.zshrc
+    regexp: '^#\sZSH_CUSTOM(.*)$'
+    replace: 'ZSH_CUSTOM=/home/{{item}}/Software/home/zsh-custom'
+    backup: yes
+
