@@ -24,7 +24,7 @@
 - name: Update .zshrc with tmux start
   become: yes
   become_user: "{{ item }}"
-  when: ansible_user == item
+  when: (ansible_user == item) and not tmux_autoconnect
   blockinfile:
     path: ~/.zshrc
     backup: yes
@@ -33,6 +33,18 @@
     block: |
       ZSH_TMUX_AUTOSTART=true
       ZSH_TMUX_AUTOCONNECT=false
+      ZSH_AUTOSUGGEST_STRATEGY=(history completion)
+- name: Update .zshrc with tmux start and connect
+  become: yes
+  become_user: "{{ item }}"
+  when: (ansible_user == item) and tmux_autoconnect
+  blockinfile:
+    path: ~/.zshrc
+    backup: yes
+    marker: "# {mark} ANSIBLE MANAGED BLOCK "
+    insertbefore: '^source '
+    block: |
+      ZSH_TMUX_AUTOSTART=true
       ZSH_AUTOSUGGEST_STRATEGY=(history completion)
 - name: Update .zshrc no tmux start
   become: yes
